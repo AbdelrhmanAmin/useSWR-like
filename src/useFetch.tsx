@@ -5,15 +5,12 @@ import baseFetcher from "./utils/baseFetcher";
 import { useEffect, useCallback } from "react";
 import { Observer } from "./utils/createObserver";
 
-interface FetchHook<T = any> {
+export interface FetchHook<T = any> {
   data: T;
   error: any;
   isLoading: boolean;
   fetchData: () => void;
-  revalidate: (
-    updater: Function | unknown,
-    revalidateAfterSettled?: boolean
-  ) => void;
+  revalidate: (updater: Function | unknown, updateOnSettle?: boolean) => void;
 }
 
 interface Options {
@@ -21,6 +18,9 @@ interface Options {
   revalidateOnMount?: boolean;
   fallbackData?: any;
   dedupingInterval?: number;
+  onSuccess?: (data: any) => void;
+  onError?: (error: any) => void;
+  onSettle?: () => void;
 }
 
 const getKeyFrom = (
@@ -39,13 +39,16 @@ const DEFAULT_SETTINGS = {
   revalidateOnMount: false,
   fallbackData: null,
   dedupingInterval: 1000,
+  onSuccess: () => {},
+  onError: () => {},
+  onSettle: () => {},
 };
 
 const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
-  const settings = { ...DEFAULT_SETTINGS, ...options };
+  const config = { ...DEFAULT_SETTINGS, ...options };
   const globalContext = useFetchContext();
   const context = (globalContext || defaultProviderValue) as Provider;
-  const optionsQueue = [settings, globalContext];
+  const optionsQueue = [config, globalContext];
   const isValidKey = key && typeof key === "string";
 
   const [cache, fetching, errors, staleWatcher, keysToRevalidateOnFocus]: [
@@ -105,29 +108,32 @@ const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
           cache.setEntry(key, data);
           errors.setEntry(key, null);
           staleWatcher.setEntry(key, Date.now());
+          config.onSuccess(data);
         })
         .catch((err) => {
           errors.setEntry(key, err);
           cache.setEntry(key, null);
+          config.onError(err);
         })
         .finally(() => {
           setFetching(false);
+          config.onSettle();
         });
     }
   };
 
   const revalidate: FetchHook["revalidate"] = useCallback(
-    async (updater, revalidateAfterSettled) => {
+    async (updater, UpdateOnSettle) => {
       if (isValidKey) {
         if (typeof updater === "function") {
           const newData = updater(data);
           cache.setEntry(key, newData);
-          if (revalidateAfterSettled) {
+          if (UpdateOnSettle) {
             fetchData();
           }
         } else if (updater) {
           cache.setEntry(key, updater);
-          if (revalidateAfterSettled) {
+          if (UpdateOnSettle) {
             fetchData();
           }
         } else {
@@ -137,6 +143,15 @@ const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
     },
     [fetchData, key]
   );
+
+  useEffect(() => {
+    if (isValidKey) {
+      context.revalidators.set(key, revalidate);
+      return () => {
+        context.revalidators.set(key, undefined);
+      };
+    }
+  }, [revalidate]);
 
   useEffect(() => {
     if (isValidKey) {
