@@ -4,6 +4,14 @@
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.3",
     "globals": "^15.14.0",
-    "typescript-eslint": "^8.19.1"
+    "typescript-eslint": "^8.19.1",
+    "vite": "^3.0.0",
+    "vitest": "^0.20.0"
+  },
+  "dependencies": {
+    "use-sync-external-store": "^1.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   }
 }

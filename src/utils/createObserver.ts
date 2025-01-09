@@ -1,5 +1,5 @@
-type Observer = {
-  subscribe: (listener: (data: any) => void) => void;
+export type Observer = {
+  subscribe: (listener: (data: any) => void) => () => void;
   setEntry: (k: string, v: any) => void;
   entries: Map<string, any>;
 };
@@ -11,6 +11,9 @@ const createObserver = (): Observer => {
   return {
     subscribe: (listener) => {
       listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
     setEntry: (k, v) => {
       entries.set(k, v);
