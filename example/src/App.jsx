@@ -1,6 +1,8 @@
-import Cats from "./components/Cats";
+import { useFetchConfig } from "use-swr-like";
+import Cats, { CATS_API } from "./components/Cats";
 
 function App() {
+  const { revalidate } = useFetchConfig();
   return (
     <div
       style={{
@@ -14,6 +16,7 @@ function App() {
       }}
     >
       <h1 className="text-center">Cats</h1>
+      <button onClick={() => revalidate(CATS_API)}>Grab new kittens</button>
       <div
         style={{
           display: "grid",

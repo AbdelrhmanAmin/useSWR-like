@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from "use-sync-external-store";
 import { Nullable, useFetchContext } from "./providers/ContextProvider";
-import defaultProviderValue, { Provider } from "./providers/GlobalProvider";
+import defaultProviderValue, {
+  API,
+  Provider,
+} from "./providers/GlobalProvider";
 import baseFetcher from "./utils/baseFetcher";
 import { useEffect, useCallback } from "react";
 import { Observer } from "./utils/createObserver";
@@ -11,16 +14,6 @@ export interface FetchHook<T = any> {
   isLoading: boolean;
   fetchData: () => void;
   revalidate: (updater: Function | unknown, updateOnSettle?: boolean) => void;
-}
-
-export interface Options {
-  revalidateOnFocus?: boolean;
-  revalidateOnMount?: boolean;
-  fallbackData?: any;
-  dedupingInterval?: number;
-  onSuccess?: (data: any) => void;
-  onError?: (error: any) => void;
-  onSettle?: () => void;
 }
 
 const getKeyFrom = (
@@ -34,21 +27,11 @@ const getKeyFrom = (
   return resources[key];
 };
 
-const DEFAULT_SETTINGS = {
-  revalidateOnFocus: false,
-  revalidateOnMount: false,
-  fallbackData: null,
-  dedupingInterval: 1000,
-  onSuccess: () => {},
-  onError: () => {},
-  onSettle: () => {},
-};
-
-const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
-  const config = { ...DEFAULT_SETTINGS, ...options };
+const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
   const globalContext = useFetchContext();
   const context = (globalContext || defaultProviderValue) as Provider;
-  const optionsQueue = [config, globalContext];
+  const contextQueue = [globalContext, defaultProviderValue];
+  const optionsQueue = [options, globalContext];
   const isValidKey = key && typeof key === "string";
 
   const [cache, fetching, errors, staleWatcher, keysToRevalidateOnFocus]: [
@@ -58,20 +41,30 @@ const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
     Observer,
     Provider["keysToRevalidateOnFocus"]
   ] = [
-    getKeyFrom("cache", context),
-    getKeyFrom("fetching", context),
-    getKeyFrom("errors", context),
-    getKeyFrom("staleWatcher", context),
-    getKeyFrom("keysToRevalidateOnFocus", context),
+    getKeyFrom("cache", contextQueue),
+    getKeyFrom("fetching", contextQueue),
+    getKeyFrom("errors", contextQueue),
+    getKeyFrom("staleWatcher", contextQueue),
+    getKeyFrom("keysToRevalidateOnFocus", contextQueue),
   ];
 
-  const [revalidateOnMount, revalidateOnFocus, fallbackData, dedupingInterval] =
-    [
-      getKeyFrom("revalidateOnMount", optionsQueue),
-      getKeyFrom("revalidateOnFocus", optionsQueue),
-      options?.fallbackData || getKeyFrom("fallback", context),
-      getKeyFrom("dedupingInterval", optionsQueue) ?? 0,
-    ];
+  const [
+    revalidateOnMount,
+    revalidateOnFocus,
+    fallbackData,
+    dedupingInterval,
+    onSettle,
+    onSuccess,
+    onError,
+  ] = [
+    getKeyFrom("revalidateOnMount", optionsQueue),
+    getKeyFrom("revalidateOnFocus", optionsQueue),
+    options?.fallbackData || getKeyFrom("fallback", contextQueue),
+    getKeyFrom("dedupingInterval", optionsQueue) ?? 0,
+    getKeyFrom("onSettle", optionsQueue),
+    getKeyFrom("onSuccess", optionsQueue),
+    getKeyFrom("onError", optionsQueue),
+  ];
 
   const data: T = useSyncExternalStore(
     cache.subscribe,
@@ -108,15 +101,15 @@ const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
           cache.setEntry(key, data);
           errors.setEntry(key, null);
           staleWatcher.setEntry(key, Date.now());
-          config.onSuccess(data);
+          onSuccess?.(data);
         })
         .catch((err) => {
           errors.setEntry(key, err);
           cache.setEntry(key, null);
-          config.onError(err);
+          onError?.(err);
         })
         .finally(() => {
-          config.onSettle();
+          onSettle?.();
           setFetching(false);
         });
     }
