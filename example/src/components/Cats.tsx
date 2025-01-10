@@ -1,5 +1,5 @@
 import React from "react";
-import { useFetch } from "use-swr-like-src";
+import { useFetch } from "use-swr-like";
 
 const Cats = ({ id }: { id: string | number }) => {
   const { data, error, isLoading } = useFetch(
