@@ -13,7 +13,7 @@ export interface FetchHook<T = any> {
   revalidate: (updater: Function | unknown, updateOnSettle?: boolean) => void;
 }
 
-interface Options {
+export interface Options {
   revalidateOnFocus?: boolean;
   revalidateOnMount?: boolean;
   fallbackData?: any;
@@ -69,7 +69,7 @@ const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
     [
       getKeyFrom("revalidateOnMount", optionsQueue),
       getKeyFrom("revalidateOnFocus", optionsQueue),
-      getKeyFrom("fallbackData", optionsQueue) || globalContext?.fallback,
+      options?.fallbackData || getKeyFrom("fallback", context),
       getKeyFrom("dedupingInterval", optionsQueue) ?? 0,
     ];
 
@@ -116,8 +116,8 @@ const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
           config.onError(err);
         })
         .finally(() => {
-          setFetching(false);
           config.onSettle();
+          setFetching(false);
         });
     }
   };
@@ -182,7 +182,7 @@ const useFetch = <T,>(key: string, options?: Options): FetchHook<T> => {
   }, [revalidateOnFocus]);
 
   return {
-    data,
+    data: typeof data === "undefined" ? fallbackData : data,
     error: isValidKey ? error : null,
     isLoading: isValidKey ? isLoading : false,
     fetchData,

@@ -15,8 +15,12 @@ const useFetchConfig = () => {
     return context.revalidators.get(key)?.(updater, updateOnSettle);
   };
   return {
-    ...context,
     revalidate,
+    fallback: context?.fallback,
+    cache: context?.cache,
+    dedupingInterval: context?.dedupingInterval,
+    revalidateOnFocus: context?.revalidateOnFocus,
+    revalidateOnMount: context?.revalidateOnMount,
   };
 };
 

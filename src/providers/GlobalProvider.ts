@@ -1,4 +1,4 @@
-import { FetchHook } from "../useFetch";
+import { FetchHook, Options } from "../useFetch";
 import createObserver, { Observer } from "../utils/createObserver";
 
 // In case a FetchProvider has not been added as a wrapper. Pick up the config from this.
@@ -10,6 +10,11 @@ const defaultProviderValue = {
   fallback: {},
   keysToRevalidateOnFocus: new Map(),
   revalidators: new Map(),
+  revalidateOnMount: true,
+  revalidateOnFocus: false,
+  dedupingInterval: 2000,
+  onSuccess: undefined,
+  onError: undefined,
 };
 
 export interface Provider {
@@ -20,6 +25,11 @@ export interface Provider {
   fallback: any;
   keysToRevalidateOnFocus: Map<string, boolean>;
   revalidators: Map<string, FetchHook["revalidate"] | undefined>;
+  revalidateOnMount: boolean;
+  revalidateOnFocus: boolean;
+  dedupingInterval: number;
+  onSuccess: Options["onSuccess"];
+  onError: Options["onError"];
 }
 
 export default defaultProviderValue;

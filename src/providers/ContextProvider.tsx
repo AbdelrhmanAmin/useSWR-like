@@ -1,5 +1,5 @@
 import React, { createContext, useMemo } from "react";
-import createObserver, { Observer } from "../utils/createObserver";
+import createObserver from "../utils/createObserver";
 
 export type Nullable<T> = T | null;
 
@@ -20,6 +20,8 @@ const FetchProvider = ({
       cache: createObserver(),
       fetching: createObserver(),
       errors: createObserver(),
+      staleWatcher: createObserver(),
+      revalidators: new Map(),
     };
   }, [value]);
   return <FetchContext.Provider value={ctx}>{children}</FetchContext.Provider>;
@@ -31,3 +33,4 @@ const useFetchContext = () => {
 };
 
 export { FetchProvider, useFetchContext };
+
