@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "use-sync-external-store";
+import { useSyncExternalStore } from "use-sync-external-store/shim";
 import { Nullable, useFetchContext } from "./providers/ContextProvider";
 import defaultProviderValue, {
   API,
@@ -28,11 +28,12 @@ const getKeyFrom = (
 };
 
 const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
+  const isValidKey = !!key && typeof key === "string" && key.length > 0;
+
   const globalContext = useFetchContext();
   const context = (globalContext || defaultProviderValue) as Provider;
   const contextQueue = [globalContext, defaultProviderValue];
   const optionsQueue = [options, globalContext];
-  const isValidKey = key && typeof key === "string";
 
   const [cache, fetching, errors, staleWatcher, keysToRevalidateOnFocus]: [
     Observer,
@@ -146,11 +147,7 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
     }
   }, [revalidate]);
 
-  useEffect(() => {
-    if (isValidKey) {
-      fetchData();
-    }
-  }, []);
+  useEffect(fetchData, []);
 
   useEffect(() => {
     if (revalidateOnMount) {
@@ -173,6 +170,10 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
       return register();
     }
   }, [revalidateOnFocus]);
+
+  if(!isValidKey) {
+    throw new Error("[useFetch] key must be a non-empty string.");
+  }
 
   return {
     data: typeof data === "undefined" ? fallbackData : data,

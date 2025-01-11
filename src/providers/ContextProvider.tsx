@@ -1,4 +1,4 @@
-import React, { createContext, useMemo } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import createObserver from "../utils/createObserver";
 import { API, Provider } from "./GlobalProvider";
 
@@ -7,7 +7,7 @@ export type Nullable<T> = T | null;
 type ContextProvider = Omit<Provider, "fallback" | "keysToRevalidateOnFocus"> &
   API;
 
-const FetchContext = createContext<Nullable<ContextProvider>>(null);
+const FetchContext = createContext<ContextProvider>({} as ContextProvider);
 
 const FetchProvider = ({
   children,
@@ -30,7 +30,7 @@ const FetchProvider = ({
 };
 
 const useFetchContext = () => {
-  const ctx = React.useContext(FetchContext);
+  const ctx = useContext(FetchContext);
   return ctx;
 };
 
