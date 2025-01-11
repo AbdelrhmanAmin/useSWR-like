@@ -21,4 +21,13 @@ describe("useFetch", () => {
     expect(result.current).toHaveProperty("fetchData");
     expect(result.current).toHaveProperty("revalidate");
   });
+  it("shouldn't fetch if enabled is false", () => {
+    const { result } = renderHook(() =>
+      useFetch("https://jsonplaceholder.typicode.com/todos/1", {
+        enabled: false,
+      })
+    );
+    const isEmpty = Object.keys(result.current.data as object).length === 0;
+    expect(isEmpty).toBe(true);
+  });
 });

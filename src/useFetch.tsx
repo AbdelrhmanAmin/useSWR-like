@@ -27,15 +27,20 @@ const getKeyFrom = (
   return resources[key];
 };
 
-const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
+const useFetch = <T,>(
+  key: string,
+  options: API & { enabled?: boolean } = {
+    enabled: true,
+  }
+): FetchHook<T> => {
   const isValidKey = !!key && typeof key === "string" && key.length > 0;
 
   const globalContext = useFetchContext();
   const context = (globalContext || defaultProviderValue) as Provider;
-  const ctxSource = globalContext ? "context" : "default";
+  const ctxSource__debugging = globalContext ? "context" : "default";
   const contextQueue = [globalContext, defaultProviderValue];
   const optionsQueue = [options, globalContext];
-
+  const enabled = getKeyFrom("enabled", options);
   const [cache, fetching, errors, staleWatcher, keysToRevalidateOnFocus]: [
     Observer,
     Observer,
@@ -80,6 +85,7 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
   );
   const setFetching = (state: boolean) => fetching.setEntry(key, state);
   const fetchData = () => {
+    if (!enabled) return;
     const isCurrentlyFetching = fetching.entries.get(key);
     const lastFetchTime = staleWatcher.entries.get(key);
     const canFetch = (() => {
@@ -141,7 +147,6 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
 
   useEffect(() => {
     if (isValidKey) {
-      console.log({ [ctxSource]: context });
       context.revalidators.set(key, revalidate);
       return () => {
         context.revalidators.set(key, undefined);
@@ -176,7 +181,6 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
   if (!isValidKey) {
     throw new Error("[useFetch] key must be a non-empty string.");
   }
-
   return {
     data: typeof data === "undefined" ? fallbackData : data,
     error: isValidKey ? error : null,
