@@ -1,7 +1,7 @@
 import React from "react";
 import { useFetch, useFetchConfig } from "use-swr-like";
 
-export const CATS_API = "https://api.thecatapi.com/v1/images/search";
+export const CATS_API = "https://api.thecatapi.com/v1/images/search?size=small";
 
 const Cats = ({ id }: { id: string | number }) => {
   const { data, error, isLoading } = useFetch(CATS_API);
@@ -19,7 +19,11 @@ const Cats = ({ id }: { id: string | number }) => {
               width: "300px",
               height: "300px",
 
+              transition: "filter 0.3s",
               border: "2px solid white",
+              ...(isLoading && {
+                filter: "blur(10px",
+              }),
             }}
           />
         )}
