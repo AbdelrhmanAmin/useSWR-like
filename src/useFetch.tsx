@@ -32,6 +32,7 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
 
   const globalContext = useFetchContext();
   const context = (globalContext || defaultProviderValue) as Provider;
+  const ctxSource = globalContext ? "context" : "default";
   const contextQueue = [globalContext, defaultProviderValue];
   const optionsQueue = [options, globalContext];
 
@@ -140,6 +141,7 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
 
   useEffect(() => {
     if (isValidKey) {
+      console.log({ [ctxSource]: context });
       context.revalidators.set(key, revalidate);
       return () => {
         context.revalidators.set(key, undefined);
@@ -171,7 +173,7 @@ const useFetch = <T,>(key: string, options?: API): FetchHook<T> => {
     }
   }, [revalidateOnFocus]);
 
-  if(!isValidKey) {
+  if (!isValidKey) {
     throw new Error("[useFetch] key must be a non-empty string.");
   }
 

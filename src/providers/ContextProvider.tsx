@@ -7,7 +7,7 @@ export type Nullable<T> = T | null;
 type ContextProvider = Omit<Provider, "fallback" | "keysToRevalidateOnFocus"> &
   API;
 
-const FetchContext = createContext<ContextProvider>({} as ContextProvider);
+const FetchContext = createContext<Nullable<ContextProvider>>(null);
 
 const FetchProvider = ({
   children,
