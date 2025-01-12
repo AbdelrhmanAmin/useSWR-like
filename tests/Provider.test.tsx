@@ -1,15 +1,12 @@
 import {
-  render,
-  renderHook,
-  screen,
-  waitFor,
-  waitForElementToBeRemoved,
   act,
+  render,
+  screen,
+  waitFor
 } from "@testing-library/react";
 import React from "react";
-import { useFetch, useFetchConfig } from "use-swr-like";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { FetchProvider } from "use-swr-like";
+import { FetchProvider, useFetch, useFetchConfig } from "use-swr-like";
+import { describe, expect, it } from "vitest";
 
 const Component = ({ id }) => {
   const { data, error, isLoading } = useFetch<{ title: string }>(
