@@ -6,7 +6,7 @@ import "./index.css";
 createRoot(document.getElementById("root")).render(
   <>
     <FetchProvider
-      value={{
+      config={{
         onSuccess: (data) => console.log(data),
         revalidateOnFocus: true,
       }}

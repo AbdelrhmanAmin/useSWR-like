@@ -11,22 +11,22 @@ const FetchContext = createContext<Nullable<ContextProvider>>(null);
 
 const FetchProvider = ({
   children,
-  value,
+  config,
 }: {
   children: React.ReactNode;
-  value?: API;
+  config?: API;
 }) => {
   const ctx = useMemo(() => {
     return {
       revalidateOnFocus: false,
-      ...value,
+      ...config,
       cache: createObserver(),
       fetching: createObserver(),
       errors: createObserver(),
       staleWatcher: createObserver(),
       revalidators: new Map(),
     };
-  }, [value]);
+  }, [config]);
   return <FetchContext.Provider value={ctx}>{children}</FetchContext.Provider>;
 };
 
