@@ -31,10 +31,7 @@ export type LocalOptionsAPI = API & { enabled?: boolean };
 
 const useFetch = <T,>(key: string, options?: LocalOptionsAPI): FetchHook<T> => {
   const isValidKey = !!key && typeof key === "string" && key.length > 0;
-  const config = useMemo(
-    () => Object.assign({ enabled: true, revalidateOnMount: true }, options),
-    []
-  );
+  const config = useMemo(() => Object.assign({ enabled: true }, options), []);
   const globalContext = useFetchContext();
   const context = (globalContext || defaultProviderValue) as Provider;
   const ctxSource__debugging = globalContext ? "context" : "default";
@@ -56,7 +53,6 @@ const useFetch = <T,>(key: string, options?: LocalOptionsAPI): FetchHook<T> => {
   ];
 
   const [
-    revalidateOnMount,
     revalidateOnFocus,
     fallbackData,
     dedupingInterval,
@@ -64,7 +60,6 @@ const useFetch = <T,>(key: string, options?: LocalOptionsAPI): FetchHook<T> => {
     onSuccess,
     onError,
   ] = [
-    getKeyFrom("revalidateOnMount", optionsQueue),
     getKeyFrom("revalidateOnFocus", optionsQueue),
     options?.fallbackData || getKeyFrom("fallback", contextQueue),
     getKeyFrom("dedupingInterval", optionsQueue) ?? 0,
@@ -155,10 +150,10 @@ const useFetch = <T,>(key: string, options?: LocalOptionsAPI): FetchHook<T> => {
   }, [revalidate]);
 
   useEffect(() => {
-    if (revalidateOnMount) {
+    if (enabled) {
       fetchData();
     }
-  }, [revalidateOnMount]);
+  }, [enabled]);
 
   useEffect(() => {
     if (revalidateOnFocus && isValidKey) {

@@ -19,7 +19,6 @@ const useFetchConfig = () => {
     cache: context?.cache,
     dedupingInterval: context?.dedupingInterval,
     revalidateOnFocus: context?.revalidateOnFocus,
-    revalidateOnMount: context?.revalidateOnMount,
     onError: context?.onError,
     onSuccess: context?.onSuccess,
     onSettle: context?.onSettle,

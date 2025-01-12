@@ -10,7 +10,6 @@ const defaultProviderValue = {
   fallback: {},
   keysToRevalidateOnFocus: new Map(),
   revalidators: new Map(),
-  revalidateOnMount: true,
   revalidateOnFocus: false,
   dedupingInterval: 2000,
   onSuccess: undefined,
@@ -30,7 +29,6 @@ export type Provider = {
 
 export type API = {
   revalidateOnFocus?: boolean;
-  revalidateOnMount?: boolean;
   fallbackData?: any;
   dedupingInterval?: number;
   onSuccess?: (data: any) => void;

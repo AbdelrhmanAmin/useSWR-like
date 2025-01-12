@@ -25,7 +25,7 @@ const Component = ({
     <div>
       {isLoading && <p>Loading...</p>}
       {error && <p>Error: {error}</p>}
-      {data ? (
+      {data.title ? (
         <p data-testid="title">{data.title}</p>
       ) : (
         <p data-testid="empty">No data</p>
@@ -48,7 +48,7 @@ const renderExample = (
   );
 };
 
-describe("deduplication", () => {
+describe("deduplication and control", () => {
   beforeEach(() => {
     setupMockFetch();
   });
@@ -61,8 +61,14 @@ describe("deduplication", () => {
     expect(invokes).toBe(0);
   });
 
+  it("should be empty", async () => {
+    renderExample([1, 2], [{ enabled: false }, { enabled: false }]);
+    await waitFor(() => screen.getAllByTestId("empty"));
+    expect(screen.getAllByTestId("empty").length).toBe(2);
+  });
+
   it("should only start the first one", () => {
-    renderExample([1, 2], [{ enabled: true }, { enabled: false }]);
+    renderExample([1, 2], [{}, { enabled: false }]);
     const { invokes, URLS } = getMockContext();
     console.log({ URLS });
     expect(invokes).toBe(1);
