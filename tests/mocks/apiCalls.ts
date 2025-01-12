@@ -1,12 +1,13 @@
-
 let URLsCalled: string[] = [];
 let invokes = 0;
 
+const orgFetchMethod = globalThis.fetch;
+
 export const setupMockFetch = () => {
-  const originalFetch = globalThis.fetch;
   globalThis.fetch = function () {
     invokes++;
-    return originalFetch.apply(this, arguments);
+    URLsCalled.push(arguments[0]);
+    return orgFetchMethod.apply(this, arguments);
   };
 };
 

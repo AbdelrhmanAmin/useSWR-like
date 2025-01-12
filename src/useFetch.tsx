@@ -5,7 +5,7 @@ import defaultProviderValue, {
   Provider,
 } from "./providers/GlobalProvider";
 import baseFetcher from "./utils/baseFetcher";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { Observer } from "./utils/createObserver";
 
 export interface FetchHook<T = any> {
@@ -27,20 +27,20 @@ const getKeyFrom = (
   return resources[key];
 };
 
-const useFetch = <T,>(
-  key: string,
-  options: API & { enabled?: boolean } = {
-    enabled: true,
-  }
-): FetchHook<T> => {
-  const isValidKey = !!key && typeof key === "string" && key.length > 0;
+export type LocalOptionsAPI = API & { enabled?: boolean };
 
+const useFetch = <T,>(key: string, options?: LocalOptionsAPI): FetchHook<T> => {
+  const isValidKey = !!key && typeof key === "string" && key.length > 0;
+  const config = useMemo(
+    () => Object.assign({ enabled: true, revalidateOnMount: true }, options),
+    []
+  );
   const globalContext = useFetchContext();
   const context = (globalContext || defaultProviderValue) as Provider;
   const ctxSource__debugging = globalContext ? "context" : "default";
   const contextQueue = [globalContext, defaultProviderValue];
-  const optionsQueue = [options, globalContext];
-  const enabled = getKeyFrom("enabled", options);
+  const optionsQueue = [config, globalContext];
+  const enabled = getKeyFrom("enabled", config);
   const [cache, fetching, errors, staleWatcher, keysToRevalidateOnFocus]: [
     Observer,
     Observer,
@@ -85,10 +85,12 @@ const useFetch = <T,>(
   );
   const setFetching = (state: boolean) => fetching.setEntry(key, state);
   const fetchData = () => {
-    if (!enabled) return;
     const isCurrentlyFetching = fetching.entries.get(key);
     const lastFetchTime = staleWatcher.entries.get(key);
     const canFetch = (() => {
+      if (!enabled) {
+        return false;
+      }
       if (!isValidKey) {
         return false;
       }
@@ -101,26 +103,24 @@ const useFetch = <T,>(
       const isActive = timeSinceLastFetch > dedupingInterval;
       return isActive && !isCurrentlyFetching;
     })();
-
-    if (canFetch) {
-      setFetching(true);
-      baseFetcher(key)
-        .then((data) => {
-          cache.setEntry(key, data);
-          errors.setEntry(key, null);
-          staleWatcher.setEntry(key, Date.now());
-          onSuccess?.(data);
-        })
-        .catch((err) => {
-          errors.setEntry(key, err);
-          cache.setEntry(key, null);
-          onError?.(err);
-        })
-        .finally(() => {
-          onSettle?.();
-          setFetching(false);
-        });
-    }
+    if (!canFetch) return;
+    setFetching(true);
+    baseFetcher(key)
+      .then((data) => {
+        cache.setEntry(key, data);
+        errors.setEntry(key, null);
+        staleWatcher.setEntry(key, Date.now());
+        onSuccess?.(data);
+      })
+      .catch((err) => {
+        errors.setEntry(key, err);
+        cache.setEntry(key, null);
+        onError?.(err);
+      })
+      .finally(() => {
+        onSettle?.();
+        setFetching(false);
+      });
   };
 
   const revalidate: FetchHook["revalidate"] = useCallback(
@@ -153,8 +153,6 @@ const useFetch = <T,>(
       };
     }
   }, [revalidate]);
-
-  useEffect(fetchData, []);
 
   useEffect(() => {
     if (revalidateOnMount) {

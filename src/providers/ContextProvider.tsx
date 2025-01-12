@@ -18,6 +18,8 @@ const FetchProvider = ({
 }) => {
   const ctx = useMemo(() => {
     return {
+      revalidateOnFocus: false,
+      revalidateOnMount: true,
       ...value,
       cache: createObserver(),
       fetching: createObserver(),
